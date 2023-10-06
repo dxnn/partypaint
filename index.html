@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>">
   <style>
     .bospeak {
       font-family: monospace;
@@ -11,16 +13,16 @@
     #cancan {
       border: 1px solid blue;
     }
-
   </style>
   <title>Messing around with Myrna</title>
 </head>
 <body>
 
-
   <p>Hi everybody!</p>
   <p class="bospeak">Hello I am Mr Bo</p>
-  <p>Arrows/ASDW change brush; space changes paint mode; Q to lift brush; P to party!</p>
+  <!-- <p><a href="#" id="export">Export</a> or import <input type="file" name="import" id="import"></p> -->
+  <p>Controls: arrows/ASDW change brush; space changes paint mode; Q to lift brush; P to party!</p>
+  <p id="mode"></p>
   <canvas id="cancan" width="600" height="600"></canvas>
 
   <script src="main.js"></script>
