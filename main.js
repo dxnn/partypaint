@@ -107,15 +107,38 @@ function comp(f, g) {
 }
 
 function save() {
-  alert('save')
+  can.toBlob(function(blob) {
+    let url = URL.createObjectURL(blob);
+    el('hiddensaver').setAttribute('href', url);
+    el('hiddensaver').click()
+  });
 }
 
-function load() {
-  alert('load')
+
+// function chunker(arrayBuffer) {
+//   let arr = new Uint8Array(arrayBuffer)
+//   let cs = getChunks(arr)
+//   return cs
+// }
+// function add_toda_chunk(cs, profile) {
+//   let iend = cs.pop()
+//   let profile_chunk = {chunkType: 'toDa', data: slam_obj(profile)}
+//   cs.push(profile_chunk)
+//   cs.push(iend)
+//   return cs
+// }
+
+
+
+async function load(t) {
+  let file = t.srcElement.files?.[0]
+  let img = new Image()
+  img.src = URL.createObjectURL(file)
+  img.onload = _ => ctx.drawImage(img, 0, 0)
 }
 
-// el('export').addEventListener('click', save)
-// el('import').addEventListener('change', load)
+el('export').addEventListener('click', save)
+el('import').addEventListener('change', load)
 
 function go(f) {
   requestAnimationFrame(e => {

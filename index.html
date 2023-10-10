@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22>
+    <text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>">
   <style>
     .bospeak {
       font-family: monospace;
@@ -20,11 +21,16 @@
 
   <p>Hi everybody!</p>
   <p class="bospeak">Hello I am Mr Bo</p>
-  <!-- <p><a href="#" id="export">Export</a> or import <input type="file" name="import" id="import"></p> -->
+  <p>
+    <a href="#" id="export">Save image</a>
+    <a href="" id="hiddensaver" download="my-party-painting.png" style="display: none;"></a>
+    or load image <input type="file" name="import" id="import">
+  </p>
   <p>Controls: arrows/ASDW change brush; space changes paint mode; Q to lift brush; P to party!</p>
   <p id="mode"></p>
   <canvas id="cancan" width="600" height="600"></canvas>
 
+  <script type="text/javascript" src="png-chunks.js"></script>
   <script src="main.js"></script>
 </body>
 </html>
