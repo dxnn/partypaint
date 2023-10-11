@@ -19,19 +19,46 @@
 </head>
 <body>
 
-  <p>Hi everybody!</p>
+  <!-- <p>Hi everybody!</p> -->
   <p class="bospeak">Hello I am Mr Bo</p>
+
+  <p>Controls: arrows/ASDW are brush controls; Q/E change brush; space to lift brush; P to party!</p>
+
+  <p>Loadout:
+    <select id="b1">
+      <option>b</option>
+      <option>p</option>
+      <option>e</option>
+      <option>f</option>
+    </select>
+    <select id="b2">
+      <option>b</option>
+      <option selected>p</option>
+      <option>e</option>
+      <option>f</option>
+    </select>
+    <select id="b3">
+      <option>b</option>
+      <option>p</option>
+      <option selected>e</option>
+      <option>f</option>
+    </select>
+    <select id="b4">
+      <option>b</option>
+      <option>p</option>
+      <option>e</option>
+      <option selected>f</option>
+    </select>
+  </p>
+
+  <p id="mode"></p>
+  <canvas id="cancan" width="600" height="600"></canvas>
 
   <p>
     <a href="#" id="export">Save image</a>
     <a href="" id="hiddensaver" download="my-party-painting.png" style="display: none;"></a>
     or load image <input type="file" name="import" id="import">
   </p>
-
-  <p>Controls: arrows/ASDW are brush controls; Q/E change brush; space to lift brush; P to party!</p>
-
-  <p id="mode"></p>
-  <canvas id="cancan" width="600" height="600"></canvas>
 
   <script type="text/javascript" src="png-chunks.js"></script>
   <script src="main.js"></script>
