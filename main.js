@@ -7,62 +7,21 @@ let vals = {size: 10, hue: 0, sat: 90, lig: 50}
 let party = 0
 let bnum = 0
 let lift = 0
-let loadout = {}
+let loadout = []
+let pardfun = noop
+let brush
 
-document.addEventListener('keydown', e => {
-  if(e.code === 'ArrowUp' || e.code === 'KeyW') {
-    brush?.upup?.(vals)
-  }
-  if(e.code === 'ArrowDown' || e.code === 'KeyS') {
-    brush?.down?.(vals)
-  }
-  if(e.code === 'ArrowLeft' || e.code === 'KeyA') {
-    brush?.left?.(vals)
-  }
-  if(e.code === 'ArrowRight' || e.code === 'KeyD') {
-    brush?.righ?.(vals)
-  }
-  if(e.code === 'Space') {
-    lift = (lift + 1) % 2
-  }
-  if(e.code === 'KeyP') {
-    party = (party + 1) % 2
-  }
-  if(e.code === 'KeyQ') {
-    bnum = rem(bnum - 1, brushes.length)
-    brush = brushes[bnum]
-  }
-  if(e.code === 'KeyE') {
-    bnum = (bnum + 1) % brushes.length
-    brush = brushes[bnum]
-  }
+// hey, start here!
+// - make loadout work (choose three?)
+// - experiment with second array for choosing effect?
+// - party mode: random brush change every ten seconds?
+// - multiplayer? how?
+// - drawing prompts?
+// - it's like a game engine you can plug into a game...
 
-  show_mode()
-})
+// AUDIO BRUSHES!!!
+// loadout is simple: you pick a set of brushes, and that's your loadout for that canvas
 
-can.addEventListener('mousemove', e => {
-  if(lift === 0)
-    brush.pynt(e, vals)
-})
-
-function show_mode() {
-  el('mode').innerHTML = `${lift&&'invisible'||''} ${party&&'PARTY!!!'||''} ${['draw','paint','erase','floodwaves','miniflood'][bnum]}
-                          ${vals.size}px ${vals.hue}H ${vals.sat}S ${vals.lig}L`
-}
-
-function filler(h, s, l, a) { // 0 - 100
-  return `hsl(${h * 3.6}, ${s}%, ${l}%, ${a}%)`
-}
-
-function partypaint() {
-  if(party) {
-    const imageData = ctx.getImageData(0, 0, w, h)
-    const data = imageData.data
-    for(let i = 0; i < data.length; i += 4)
-      loadout.pardfun(data, i, vals)
-    ctx.putImageData(imageData, 0, 0)
-  }
-}
 
 let brushes = [
   { 'name': 'basic black'
@@ -132,8 +91,62 @@ let brushes = [
             }
   },
 ]
-let brush = brushes[0] // make_brush(brushes[0])
 
+
+document.addEventListener('keydown', e => {
+  if(e.code === 'ArrowUp' || e.code === 'KeyW') {
+    brush?.upup?.(vals)
+    e.preventDefault()
+  }
+  if(e.code === 'ArrowDown' || e.code === 'KeyS') {
+    brush?.down?.(vals)
+    e.preventDefault()
+  }
+  if(e.code === 'ArrowLeft' || e.code === 'KeyA') {
+    brush?.left?.(vals)
+    e.preventDefault()
+  }
+  if(e.code === 'ArrowRight' || e.code === 'KeyD') {
+    brush?.righ?.(vals)
+    e.preventDefault()
+  }
+  if(e.code === 'Space') {
+    lift = (lift + 1) % 2
+    e.preventDefault()
+  }
+  if(e.code === 'KeyP') {
+    party = (party + 1) % 2
+  }
+  if(e.code === 'KeyQ') {
+    bnum = rem(bnum - 1, loadout.length)
+    brush = loadout[bnum]
+  }
+  if(e.code === 'KeyE') {
+    bnum = (bnum + 1) % loadout.length
+    brush = loadout[bnum]
+  }
+
+  show_mode()
+})
+
+can.addEventListener('mousemove', e => {
+  if(lift === 0)
+    brush.pynt(e, vals)
+})
+
+function filler(h, s, l, a) { // 0 - 100
+  return `hsl(${h * 3.6}, ${s}%, ${l}%, ${a}%)`
+}
+
+function partypaint() {
+  if(party) {
+    const imageData = ctx.getImageData(0, 0, w, h)
+    const data = imageData.data
+    for(let i = 0; i < data.length; i += 4)
+      pardfun(data, i, vals)
+    ctx.putImageData(imageData, 0, 0)
+  }
+}
 function noop() {}
 // function par(f, g) {return (...args) => {f(...args); g(...args)}}
 function par(f, g) {return (a,b,c) => {f(a,b,c); g(a,b,c)}}
@@ -164,7 +177,6 @@ function save() {
 // }
 
 
-
 function load(t) {
   let file = t.srcElement.files?.[0]
   if(!file) return
@@ -174,16 +186,46 @@ function load(t) {
   img.onload = _ => ctx.drawImage(img, 0, 0)
 }
 
-function set_loadout() {
-  // just load everything for now
+function show_brushes() {
+  let sel = el('options')
+  sel.innerHTML = brushes.map(b => `<option>${b.name}</option>`).join('')
+}
 
-  for(let b = 0; b < brushes.length; b++) {
-    let brush = brushes[b]
+function show_mode() {
+  el('mode').innerHTML = `${lift&&'invisible'||''} ${party&&'PARTY!!!'||''} ${brush.name}
+                          ${vals.size}px ${vals.hue}H ${vals.sat}S ${vals.lig}L`
+}
+
+function set_loadout() {
+  pardfun = noop
+  el('loaded').innerHTML = ''
+
+  if(!loadout.length)
+    loadout = brushes.slice(0,2)
+
+  for(let b = 0; b < loadout.length; b++) {
+    let brush = loadout[b]
     if(brush.pard)
-      loadout.pardfun = loadout.pardfun ? par(loadout.pardfun, brush.pard) : brush.pard
+      pardfun = pardfun === noop ? brush.pard : par(pardfun, brush.pard)
     if(brush.vals)
-      vals = {...vals, ...brush.vals}
+      vals = {...brush.vals, ...vals}
+    el('loaded').innerHTML += `<span class="loaded" fwump="${b}">${brush.name}</span>`
   }
+  if(!brush)
+    brush = loadout[0]
+}
+
+function add_brush(e) {
+  let index = el('options').selectedIndex
+  loadout.push(brushes[index])
+  set_loadout()
+}
+
+function rm_brush(e) {
+  if(e.target.className !== 'loaded') return
+  let i = +e.target.attributes.fwump?.value
+  loadout.splice(i,1)
+  set_loadout()
 }
 
 function go(f) {
@@ -195,7 +237,10 @@ function go(f) {
 
 el('export').addEventListener('click', save)
 el('import').addEventListener('change', load)
+el('add_brush').addEventListener('click', add_brush)
+el('loaded').addEventListener('click', rm_brush)
 
-show_mode()
 set_loadout()
+show_brushes()
+show_mode()
 go(partypaint)

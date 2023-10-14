@@ -11,6 +11,11 @@
       color: violet;
     }
 
+    .loaded {
+      color: blueviolet;
+      margin: 0.25em;
+    }
+
     #cancan {
       border: 1px solid blue;
     }
@@ -25,36 +30,8 @@
   <p>Controls: arrows/ASDW are brush controls; Q/E change brush; space to lift brush; P to party!</p>
 
   <p>Loadout:
-    <select id="b1">
-      <option>b</option>
-      <option>p</option>
-      <option>e</option>
-      <option>f</option>
-    </select>
-    <select id="b2">
-      <option>b</option>
-      <option selected>p</option>
-      <option>e</option>
-      <option>f</option>
-    </select>
-    <select id="b3">
-      <option>b</option>
-      <option>p</option>
-      <option selected>e</option>
-      <option>f</option>
-    </select>
-    <select id="b4">
-      <option>b</option>
-      <option>p</option>
-      <option>e</option>
-      <option selected>f</option>
-    </select>
-    <select id="b5">
-      <option>b</option>
-      <option>p</option>
-      <option>e</option>
-      <option selected>f</option>
-    </select>
+    <span id="loaded"></span>
+    <select id="options"></select> <button id="add_brush">Add</button>
   </p>
 
   <p id="mode"></p>
