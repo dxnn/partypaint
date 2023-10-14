@@ -68,12 +68,12 @@ let brushes = [
             }
   },
   { 'name': 'miniflood'
-  , 'vals': {'liveness': 10}
-  , 'upup': v => v.liveness += 1
-  , 'down': v => v.liveness -= 1
+  , 'vals': {'liv': 31}
+  , 'upup': v => v.liv += 1
+  , 'down': v => v.liv -= 1
   , 'left': v => v.hue = (v.hue + 10) % 101
   , 'righ': v => v.lig = (v.lig + 10) % 101
-  , 'pynt': (e,v) => {ctx.fillStyle = filler(v.hue, 90, v.lig, 98); clear(e,v); fill(e,v)}
+  , 'pynt': (e,v) => {ctx.fillStyle = filler(v.hue, 90, v.lig, 98); clear(e,{size:1}); fill(e,{size:1})}
   , 'pard': (data, i, v) => {
               if(data[i + 3] === 250) {
                 let rand = Math.floor(Math.random() * 4)
@@ -84,7 +84,7 @@ let brushes = [
                   data[n + 2] = (data[i + 2] + 1) % 256 // blue
                   data[n + 3] = data[i + 3]
                 }
-                if(1 > Math.random() * v.liveness) {
+                if(1 > Math.random() * v.liv/10) {
                   data[n + 3] = 255
                 }
               }
@@ -96,23 +96,18 @@ let brushes = [
 document.addEventListener('keydown', e => {
   if(e.code === 'ArrowUp' || e.code === 'KeyW') {
     brush?.upup?.(vals)
-    e.preventDefault()
   }
   if(e.code === 'ArrowDown' || e.code === 'KeyS') {
     brush?.down?.(vals)
-    e.preventDefault()
   }
   if(e.code === 'ArrowLeft' || e.code === 'KeyA') {
     brush?.left?.(vals)
-    e.preventDefault()
   }
   if(e.code === 'ArrowRight' || e.code === 'KeyD') {
     brush?.righ?.(vals)
-    e.preventDefault()
   }
   if(e.code === 'Space') {
     lift = (lift + 1) % 2
-    e.preventDefault()
   }
   if(e.code === 'KeyP') {
     party = (party + 1) % 2
@@ -125,6 +120,9 @@ document.addEventListener('keydown', e => {
     bnum = (bnum + 1) % loadout.length
     brush = loadout[bnum]
   }
+
+  if(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code))
+    e.preventDefault()
 
   show_mode()
 })
@@ -184,16 +182,18 @@ function load(t) {
   let img = new Image()
   img.src = URL.createObjectURL(file)
   img.onload = _ => ctx.drawImage(img, 0, 0)
+  el('import').blur()
 }
 
 function show_brushes() {
   let sel = el('options')
-  sel.innerHTML = brushes.map(b => `<option>${b.name}</option>`).join('')
+  sel.innerHTML = '<option>Add a brush</option>' + brushes.map(b => `<option>${b.name}</option>`).join('')
 }
 
 function show_mode() {
-  el('mode').innerHTML = `${lift&&'invisible'||''} ${party&&'PARTY!!!'||''} ${brush.name}
-                          ${vals.size}px ${vals.hue}H ${vals.sat}S ${vals.lig}L`
+  el('mode').innerHTML  = `${lift&&'invisible'||''} ${party&&'PARTY!!!'||''} ${brush.name} :: `
+  for(k in vals)
+    el('mode').innerHTML += `${vals[k]}${k} `
 }
 
 function set_loadout() {
@@ -209,16 +209,19 @@ function set_loadout() {
       pardfun = pardfun === noop ? brush.pard : par(pardfun, brush.pard)
     if(brush.vals)
       vals = {...brush.vals, ...vals}
-    el('loaded').innerHTML += `<span class="loaded" fwump="${b}">${brush.name}</span>`
+    el('loaded').innerHTML += `<span class="loaded" fwump="${b}" style="color: hsl(${[...brush.name].map(c=>c.charCodeAt(0)-90).reduce((acc,n)=>acc+n*7,0)}, 80%, 50%)">${brush.name}</span>`
   }
   if(!brush)
     brush = loadout[0]
+  show_mode()
 }
 
 function add_brush(e) {
-  let index = el('options').selectedIndex
+  let index = +el('options').selectedIndex - 1
   loadout.push(brushes[index])
   set_loadout()
+  el('options').selectedIndex = 0
+  el('options').blur()
 }
 
 function rm_brush(e) {
@@ -237,7 +240,7 @@ function go(f) {
 
 el('export').addEventListener('click', save)
 el('import').addEventListener('change', load)
-el('add_brush').addEventListener('click', add_brush)
+el('options').addEventListener('change', add_brush)
 el('loaded').addEventListener('click', rm_brush)
 
 set_loadout()
