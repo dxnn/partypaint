@@ -90,24 +90,23 @@ let brushes = [
             }
   },
   { 'name': 'lightning'
-  , 'upup': v => v.size += 1
-  , 'down': v => v.size -= 1
+  , 'vals': {liv: 31, jump: 1}
+  , 'upup': v => v.liv += 1
+  , 'down': v => v.liv -= 1
   , 'left': v => v.hue = (v.hue + 10) % 101
-  , 'righ': v => v.lig = (v.lig + 10) % 101
+  , 'righ': v => v.jump = (v.jump + 1) % 8
   , 'pynt': (e,v) => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 244); fill(e,{size:1})}
   , 'pard': (data, i) => {
               if(data[i + 3] === 244) {
                 ctx.fillStyle = filler(vals.hue, vals.sat, vals.lig, 244);
                 ;[-4,0,4].forEach(j => {
-                  if(Math.random() < 1/3)
+                  if(Math.random() < 1/vals.liv*10 && data.length > i+w*4+j+4) {
+                    let rand = Math.floor(Math.random() * 3)
                     data.set(data.slice(i,i+4), i+w*4+j)
-                    // ctx.fillRect(i / 4 % w + j, Math.floor(i / 4 / w)+1, 1, 1)
+                    data[i+w*4+j+rand] += j*vals.jump
+                  }
                 })
                 data[i + 3] = 255
-                // each three
-                // fill it in
-                // let rand = Math.floor(Math.random() * 4)
-                // let n = [i - w * 4, i + 4, i + w * 4, i - 4][rand]
               }
             }
   },
