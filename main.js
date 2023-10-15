@@ -3,8 +3,8 @@ const can = el('cancan')
 const ctx = can.getContext('2d', {willReadFrequently: true})
 let w = can.width
 let h = can.height
-let vals = {size: 10, hue: 0, sat: 90, lig: 50}
-let party = 0
+let vals = {size: 10, hue: 30, sat: 90, lig: 60}
+let party = 1
 let bnum = 0
 let lift = 0
 let loadout = []
@@ -12,9 +12,8 @@ let pardfun = noop
 let brush
 
 // hey, start here!
-// - make loadout work (choose three?)
 // - experiment with second array for choosing effect?
-// - party mode: random brush change every ten seconds?
+// - party mode: random brush change every ten seconds? presses random buttons? maybe it's a brush?
 // - multiplayer? how?
 // - drawing prompts?
 // - it's like a game engine you can plug into a game...
@@ -24,17 +23,12 @@ let brush
 
 
 let brushes = [
-  { 'name': 'basic black'
-  , 'upup': v => v.size += 1
-  , 'down': v => v.size -= 1
-  , 'pynt': (e,v) => {ctx.fillStyle = '#000000'; fill(e,v)}
-  },
   { 'name': 'pard paint'
   , 'upup': v => v.size += 1
   , 'down': v => v.size -= 1
   , 'left': v => v.hue = (v.hue + 10) % 101
   , 'righ': v => v.lig = (v.lig + 10) % 101
-  , 'pynt': (e,v) => {ctx.fillStyle = filler(v.hue, 90, v.lig, 100); fill(e,v)}
+  , 'pynt': (e,v) => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 255); fill(e,v)}
   , 'pard': (data, i) => {
               if(data[i] || data[i + 1] || data[i + 2]) {
                 data[i + 0] = (data[i + 0] + 1) % 256 // red
@@ -43,29 +37,15 @@ let brushes = [
               }
             }
   },
+  { 'name': 'basic black'
+  , 'upup': v => v.size += 1
+  , 'down': v => v.size -= 1
+  , 'pynt': (e,v) => {ctx.fillStyle = '#000000'; fill(e,v)}
+  },
   { 'name': 'eraser'
   , 'upup': v => v.size += 1
   , 'down': v => v.size -= 1
   , 'pynt': (e,v) => clear(e,v)
-  },
-  { 'name': 'floodwaves'
-  , 'upup': v => v.size += 1
-  , 'down': v => v.size -= 1
-  , 'left': v => v.hue = (v.hue + 10) % 101
-  , 'righ': v => v.lig = (v.lig + 10) % 101
-  , 'pynt': (e,v) => {ctx.fillStyle = filler(v.hue, 90, v.lig, 99); clear(e,v); fill(e,v)}
-  , 'pard': (data, i) => {
-              if(data[i + 3] === 252) {
-                let rand = Math.floor(Math.random() * 4)
-                let n = [i - w * 4, i + 4, i + w * 4, i - 4][rand]
-                if(data[n + 3] === 0 || data[n + 3] === 252) {
-                  data[n + 0] = (data[i + 0] + 1) % 256 // red
-                  data[n + 1] = (data[i + 1] + 1) % 256 // green
-                  data[n + 2] = (data[i + 2] + 1) % 256 // blue
-                  data[n + 3] = data[i + 3]
-                }
-              }
-            }
   },
   { 'name': 'miniflood'
   , 'vals': {'liv': 31}
@@ -73,7 +53,7 @@ let brushes = [
   , 'down': v => v.liv -= 1
   , 'left': v => v.hue = (v.hue + 10) % 101
   , 'righ': v => v.lig = (v.lig + 10) % 101
-  , 'pynt': (e,v) => {ctx.fillStyle = filler(v.hue, 90, v.lig, 98); clear(e,{size:1}); fill(e,{size:1})}
+  , 'pynt': (e,v) => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 250); clear(e,{size:1}); fill(e,{size:1})}
   , 'pard': (data, i, v) => {
               if(data[i + 3] === 250) {
                 let rand = Math.floor(Math.random() * 4)
@@ -87,6 +67,47 @@ let brushes = [
                 if(1 > Math.random() * v.liv/10) {
                   data[n + 3] = 255
                 }
+              }
+            }
+  },
+  { 'name': 'floodwaves'
+  , 'upup': v => v.size += 1
+  , 'down': v => v.size -= 1
+  , 'left': v => v.hue = (v.hue + 10) % 101
+  , 'righ': v => v.lig = (v.lig + 10) % 101
+  , 'pynt': (e,v) => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 252); clear(e,v); fill(e,v)}
+  , 'pard': (data, i) => {
+              if(data[i + 3] === 252) {
+                let rand = Math.floor(Math.random() * 4)
+                let n = [i - w * 4, i + 4, i + w * 4, i - 4][rand]
+                if(data[n + 3] === 0 || data[n + 3] === 252) {
+                  data[n + 0] = (data[i + 0] + 1) % 256 // red
+                  data[n + 1] = (data[i + 1] + 1) % 256 // green
+                  data[n + 2] = (data[i + 2] + 1) % 256 // blue
+                  data[n + 3] = data[i + 3]
+                }
+              }
+            }
+  },
+  { 'name': 'lightning'
+  , 'upup': v => v.size += 1
+  , 'down': v => v.size -= 1
+  , 'left': v => v.hue = (v.hue + 10) % 101
+  , 'righ': v => v.lig = (v.lig + 10) % 101
+  , 'pynt': (e,v) => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 244); fill(e,{size:1})}
+  , 'pard': (data, i) => {
+              if(data[i + 3] === 244) {
+                ctx.fillStyle = filler(vals.hue, vals.sat, vals.lig, 244);
+                ;[-4,0,4].forEach(j => {
+                  if(Math.random() < 1/3)
+                    data.set(data.slice(i,i+4), i+w*4+j)
+                    // ctx.fillRect(i / 4 % w + j, Math.floor(i / 4 / w)+1, 1, 1)
+                })
+                data[i + 3] = 255
+                // each three
+                // fill it in
+                // let rand = Math.floor(Math.random() * 4)
+                // let n = [i - w * 4, i + 4, i + w * 4, i - 4][rand]
               }
             }
   },
@@ -132,8 +153,8 @@ can.addEventListener('mousemove', e => {
     brush.pynt(e, vals)
 })
 
-function filler(h, s, l, a) { // 0 - 100
-  return `hsl(${h * 3.6}, ${s}%, ${l}%, ${a}%)`
+function filler(h, s, l, a) { // 0 - 100, 0-255
+  return `hsl(${h * 3.6}, ${s}%, ${l}%, ${a/255})`
 }
 
 function partypaint() {
@@ -201,7 +222,7 @@ function set_loadout() {
   el('loaded').innerHTML = ''
 
   if(!loadout.length)
-    loadout = brushes.slice(0,2)
+    loadout = brushes.slice(0,5)
 
   for(let b = 0; b < loadout.length; b++) {
     let brush = loadout[b]
