@@ -3,10 +3,8 @@ const can = el('cancan')
 const ctx = can.getContext('2d', {willReadFrequently: true})
 let w = can.width
 let h = can.height
-let vals = {} // {size: 10, hue: 30, sat: 90, lig: 60}
-let party = 1
+let vals = {party: 1, lift: 0}
 let bnum = 0
-let lift = 0
 let loadout = []
 let pardfun = noop
 let brush
@@ -158,10 +156,10 @@ document.addEventListener('keydown', e => {
   }
   if(e.code === 'Space') {
     // THINK: bring these into vals?
-    lift = (lift + 1) % 2
+    vals.lift = (vals.lift + 1) % 2
   }
   if(e.code === 'KeyP') {
-    party = (party + 1) % 2
+    vals.party = (vals.party + 1) % 2
   }
   if(e.code === 'KeyQ') {
     bnum = rem(bnum - 1, loadout.length)
@@ -179,7 +177,7 @@ document.addEventListener('keydown', e => {
 })
 
 can.addEventListener('mousemove', e => {
-  if(lift === 0) {
+  if(vals.lift === 0) {
     vals.x = e.offsetX
     vals.y = e.offsetY // THINK: anything else we should grab?
     brush.pynt(vals)
@@ -187,7 +185,7 @@ can.addEventListener('mousemove', e => {
 })
 
 function partypaint() {
-  if(party) {
+  if(vals.party) {
     const imageData = ctx.getImageData(0, 0, w, h)
     const data = imageData.data
     for(let i = 0; i < data.length; i += 4)
@@ -247,7 +245,7 @@ function show_brushes() {
 }
 
 function show_mode() {
-  el('mode').innerHTML  = `${lift&&'invisible'||''} ${party&&'PARTY!!!'||''} ${brush.name} :: `
+  el('mode').innerHTML  = `${vals.lift&&'invisible'||''} ${vals.party&&'PARTY!!!'||''} ${brush.name} :: `
   for(k in vals)
     el('mode').innerHTML += `${vals[k]}${k} `
 }
