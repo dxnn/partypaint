@@ -3,6 +3,7 @@ const can = el('cancan')
 const ctx = can.getContext('2d', {willReadFrequently: true})
 let w = can.width
 let h = can.height
+let type = new Uint8Array(w*h)
 let vals = {party: 1, lift: 0}
 let bnum = 0
 let loadout = []
@@ -36,7 +37,7 @@ let brushes = [
   , 'left': v => v.hue = (v.hue + 10) % 101
   , 'righ': v => v.lig = (v.lig + 10) % 101
   , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 255); ctx.fillRect(v.x, v.y, v.size, v.size)}
-  , 'pard': (data, i) => {
+  , 'pard': (data, type, i) => {
               if(data[i] || data[i + 1] || data[i + 2]) {
                 data[i + 0] = (data[i + 0] + 1) % 256 // red
                 data[i + 1] = (data[i + 1] + 1) % 256 // green
@@ -63,7 +64,7 @@ let brushes = [
   , 'left': v => v.hue = (v.hue + 10) % 101
   , 'righ': v => v.lig = (v.lig + 10) % 101
   , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 250); ctx.clearRect(v.x, v.y, v.size, v.size); ctx.fillRect(v.x, v.y, v.size, v.size)}
-  , 'pard': (data, i, v) => {
+  , 'pard': (data, type, i, v) => {
               if(data[i + 3] === 250) {
                 let rand = Math.floor(Math.random() * 4)
                 let n = [i - w * 4, i + 4, i + w * 4, i - 4][rand]
@@ -86,7 +87,7 @@ let brushes = [
   , 'left': v => v.hue = (v.hue + 10) % 101
   , 'righ': v => v.lig = (v.lig + 10) % 101
   , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 252); ctx.clearRect(v.x, v.y, v.size, v.size); ctx.fillRect(v.x, v.y, v.size, v.size)}
-  , 'pard': (data, i) => {
+  , 'pard': (data, type, i) => {
               if(data[i + 3] === 252) {
                 let rand = Math.floor(Math.random() * 4)
                 let n = [i - w * 4, i + 4, i + w * 4, i - 4][rand]
@@ -105,18 +106,18 @@ let brushes = [
   , 'down': v => v.liv -= 1
   , 'left': v => v.hue = (v.hue + 10) % 101
   , 'righ': v => v.jump = (v.jump + 1) % 8
-  , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 244); ctx.fillRect(v.x, v.y, 1, 1)}
-  , 'pard': (data, i) => {
-              if(data[i + 3] === 244) {
-                ctx.fillStyle = filler(vals.hue, vals.sat, vals.lig, 244);
+  , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 255); ctx.fillRect(v.x, v.y, 1, 1); type[v.y*w+v.x] = 244}
+  , 'pard': (data, type, i) => {
+              if(type[i/4] === 244) {
                 ;[-4,0,4].forEach(j => {
                   if(Math.random() < 1/vals.liv*10 && data.length > i+w*4+j+4) {
                     let rand = Math.floor(Math.random() * 3)
                     data.set(data.slice(i,i+4), i+w*4+j)
                     data[i+w*4+j+rand] += j*vals.jump
+                    type[i/4+w+j/4] = 244
                   }
                 })
-                data[i + 3] = 255
+                type[i/4] = 255
               }
             }
   },
@@ -132,9 +133,6 @@ let brushes = [
                    ctx.fill(circle)
                  }
   },
-
-
-
 ]
 
 
@@ -189,14 +187,14 @@ function partypaint() {
     const imageData = ctx.getImageData(0, 0, w, h)
     const data = imageData.data
     for(let i = 0; i < data.length; i += 4)
-      pardfun(data, i, vals)
+      pardfun(data, type, i, vals)
     ctx.putImageData(imageData, 0, 0)
   }
 }
 
 function noop() {}
 // function par(f, g) {return (...args) => {f(...args); g(...args)}}
-function par(f, g) {return (a,b,c) => {f(a,b,c); g(a,b,c)}} // faster than variadic version... /shrug
+function par(f, g) {return (a,b,c,d) => {f(a,b,c,d); g(a,b,c,d)}} // faster than variadic version... /shrug
 function rem(n, r) { return (n % r + r) % r }
 function fill(v) {}
 function clear(v) {ctx.clearRect(v.x, v.y, v.size, v.size)}
@@ -213,21 +211,6 @@ function save() {
     el('hiddensaver').click()
   });
 }
-
-
-// function chunker(arrayBuffer) {
-//   let arr = new Uint8Array(arrayBuffer)
-//   let cs = getChunks(arr)
-//   return cs
-// }
-// function add_toda_chunk(cs, profile) {
-//   let iend = cs.pop()
-//   let profile_chunk = {chunkType: 'toDa', data: slam_obj(profile)}
-//   cs.push(profile_chunk)
-//   cs.push(iend)
-//   return cs
-// }
-
 
 function load(t) {
   let file = t.srcElement.files?.[0]
@@ -285,6 +268,21 @@ function rm_brush(e) {
   set_loadout()
 }
 
+
+// function chunker(arrayBuffer) {
+//   let arr = new Uint8Array(arrayBuffer)
+//   let cs = getChunks(arr)
+//   return cs
+// }
+// function add_toda_chunk(cs, profile) {
+//   let iend = cs.pop()
+//   let profile_chunk = {chunkType: 'toDa', data: slam_obj(profile)}
+//   cs.push(profile_chunk)
+//   cs.push(iend)
+//   return cs
+// }
+
+
 function go(f) {
   requestAnimationFrame(e => {
     f()
@@ -292,12 +290,16 @@ function go(f) {
   })
 }
 
+function init() {
+  set_loadout()
+  show_brushes()
+  show_mode()
+  go(partypaint)
+}
+
 el('export').addEventListener('click', save)
 el('import').addEventListener('change', load)
 el('options').addEventListener('change', add_brush)
 el('loaded').addEventListener('click', rm_brush)
 
-set_loadout()
-show_brushes()
-show_mode()
-go(partypaint)
+init()
