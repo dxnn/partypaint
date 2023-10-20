@@ -3,7 +3,7 @@ const can = el('cancan')
 const ctx = can.getContext('2d', {willReadFrequently: true})
 let w = can.width
 let h = can.height
-let vals = {size: 10, hue: 30, sat: 90, lig: 60}
+let vals = {} // {size: 10, hue: 30, sat: 90, lig: 60}
 let party = 1
 let bnum = 0
 let lift = 0
@@ -13,22 +13,31 @@ let brush
 
 // hey, start here!
 // - experiment with second array for choosing effect?
-// - party mode: random brush change every ten seconds? presses random buttons? maybe it's a brush?
+// - party mode: random brush change every ten seconds? presses random buttons? maybe it's a brush? 'surprise me!' brush...
 // - multiplayer? how?
 // - drawing prompts?
 // - it's like a game engine you can plug into a game...
 
 // AUDIO BRUSHES!!!
-// loadout is simple: you pick a set of brushes, and that's your loadout for that canvas
+// no default vals
+// highlight brush vals (by action? that could be cool...)
+// prolly need a second array... (but could do clear for instead for lightning/miniflood over other things...)
+// make up down pynt etc all first class, and brush switch also (change their inputs to be simpler, combine e + v... (eg v.x, v.y...))
+// mirror brush
+// auto brush
+// surprise me brush
+// sandbags + sandflood brushes
+// when you save the loadout in the png save the current vals also
 
 
 let brushes = [
   { 'name': 'pard paint'
+  , 'vals': {size: 10, hue: 30, sat: 90, lig: 60}
   , 'upup': v => v.size += 1
   , 'down': v => v.size -= 1
   , 'left': v => v.hue = (v.hue + 10) % 101
   , 'righ': v => v.lig = (v.lig + 10) % 101
-  , 'pynt': (e,v) => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 255); fill(e,v)}
+  , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 255); ctx.fillRect(v.x, v.y, v.size, v.size)}
   , 'pard': (data, i) => {
               if(data[i] || data[i + 1] || data[i + 2]) {
                 data[i + 0] = (data[i + 0] + 1) % 256 // red
@@ -38,22 +47,24 @@ let brushes = [
             }
   },
   { 'name': 'basic black'
+  , 'vals': {size: 10}
   , 'upup': v => v.size += 1
   , 'down': v => v.size -= 1
-  , 'pynt': (e,v) => {ctx.fillStyle = '#000000'; fill(e,v)}
+  , 'pynt': v => {ctx.fillStyle = '#000000'; ctx.fillRect(v.x, v.y, v.size, v.size)}
   },
   { 'name': 'eraser'
+  , 'vals': {size: 10}
   , 'upup': v => v.size += 1
   , 'down': v => v.size -= 1
-  , 'pynt': (e,v) => clear(e,v)
+  , 'pynt': v => ctx.clearRect(v.x, v.y, v.size, v.size)
   },
   { 'name': 'miniflood'
-  , 'vals': {'liv': 31}
+  , 'vals': {liv: 31, hue: 30, lig: 60}
   , 'upup': v => v.liv += 1
   , 'down': v => v.liv -= 1
   , 'left': v => v.hue = (v.hue + 10) % 101
   , 'righ': v => v.lig = (v.lig + 10) % 101
-  , 'pynt': (e,v) => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 250); clear(e,{size:1}); fill(e,{size:1})}
+  , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 250); ctx.clearRect(v.x, v.y, v.size, v.size); ctx.fillRect(v.x, v.y, v.size, v.size)}
   , 'pard': (data, i, v) => {
               if(data[i + 3] === 250) {
                 let rand = Math.floor(Math.random() * 4)
@@ -71,11 +82,12 @@ let brushes = [
             }
   },
   { 'name': 'floodwaves'
+  , 'vals': {size: 10, hue: 30, lig: 60}
   , 'upup': v => v.size += 1
   , 'down': v => v.size -= 1
   , 'left': v => v.hue = (v.hue + 10) % 101
   , 'righ': v => v.lig = (v.lig + 10) % 101
-  , 'pynt': (e,v) => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 252); clear(e,v); fill(e,v)}
+  , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 252); ctx.clearRect(v.x, v.y, v.size, v.size); ctx.fillRect(v.x, v.y, v.size, v.size)}
   , 'pard': (data, i) => {
               if(data[i + 3] === 252) {
                 let rand = Math.floor(Math.random() * 4)
@@ -89,13 +101,13 @@ let brushes = [
               }
             }
   },
-  { 'name': 'lightning'
-  , 'vals': {liv: 31, jump: 1}
+  { 'name': 'lightning like'
+  , 'vals': {liv: 31, hue: 30, jump: 1}
   , 'upup': v => v.liv += 1
   , 'down': v => v.liv -= 1
   , 'left': v => v.hue = (v.hue + 10) % 101
   , 'righ': v => v.jump = (v.jump + 1) % 8
-  , 'pynt': (e,v) => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 244); fill(e,{size:1})}
+  , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 244); ctx.fillRect(v.x, v.y, 1, 1)}
   , 'pard': (data, i) => {
               if(data[i + 3] === 244) {
                 ctx.fillStyle = filler(vals.hue, vals.sat, vals.lig, 244);
@@ -110,10 +122,28 @@ let brushes = [
               }
             }
   },
+  { 'name': 'dots'
+  , 'vals': {size: 10, hue: 30, sat: 90}
+  , 'upup': v => v.size += 1
+  , 'down': v => v.size -= 1
+  , 'left': v => v.hue = (v.hue + 10) % 101
+  , 'righ': v => v.sat = (v.sat + 10) % 101
+  , 'pynt': v => { ctx.fillStyle = filler(v.hue, v.sat, v.lig, 255)
+                   let circle = new Path2D()
+                   circle.arc(100, 35, 25, 0, 2 * Math.PI)
+                   ctx.fill(circle)
+                 }
+  },
+
+
+
 ]
 
 
 document.addEventListener('keydown', e => {
+  // THINK: maybe switch to looping while keydown, for consistent velocity regardless of keyboard repeat?
+  //        this might also allow polyphony...
+  //        could tweak polyphony knobs with a different brush, to eg alter the repeat rates of arrows
   if(e.code === 'ArrowUp' || e.code === 'KeyW') {
     brush?.upup?.(vals)
   }
@@ -127,6 +157,7 @@ document.addEventListener('keydown', e => {
     brush?.righ?.(vals)
   }
   if(e.code === 'Space') {
+    // THINK: bring these into vals?
     lift = (lift + 1) % 2
   }
   if(e.code === 'KeyP') {
@@ -148,13 +179,12 @@ document.addEventListener('keydown', e => {
 })
 
 can.addEventListener('mousemove', e => {
-  if(lift === 0)
-    brush.pynt(e, vals)
+  if(lift === 0) {
+    vals.x = e.offsetX
+    vals.y = e.offsetY // THINK: anything else we should grab?
+    brush.pynt(vals)
+  }
 })
-
-function filler(h, s, l, a) { // 0 - 100, 0-255
-  return `hsl(${h * 3.6}, ${s}%, ${l}%, ${a/255})`
-}
 
 function partypaint() {
   if(party) {
@@ -165,12 +195,18 @@ function partypaint() {
     ctx.putImageData(imageData, 0, 0)
   }
 }
+
 function noop() {}
 // function par(f, g) {return (...args) => {f(...args); g(...args)}}
-function par(f, g) {return (a,b,c) => {f(a,b,c); g(a,b,c)}}
+function par(f, g) {return (a,b,c) => {f(a,b,c); g(a,b,c)}} // faster than variadic version... /shrug
 function rem(n, r) { return (n % r + r) % r }
-function fill(e,v) {ctx.fillRect(e.offsetX, e.offsetY, v.size, v.size)}
-function clear(e,v) {ctx.clearRect(e.offsetX, e.offsetY, v.size, v.size)}
+function fill(v) {}
+function clear(v) {ctx.clearRect(v.x, v.y, v.size, v.size)}
+
+function filler(h, s, l, a) { // 0 - 100, 0-255
+  return `hsl(${h * 3.6}, ${s}%, ${l}%, ${a/255})`
+}
+
 
 function save() {
   can.toBlob(function(blob) {
