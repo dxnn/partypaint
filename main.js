@@ -50,17 +50,17 @@ let brushes = [
   , 'left': v => v.hue = (v.hue + 10) % 101
   , 'righ': v => v.lig = (v.lig + 10) % 101
   , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 255); ctx.fillRect(v.x, v.y, v.syz, v.syz)}
-  , 'pard': (terms, types) => {
-        const l = types.length
-        for(let i = 0; i < l; i++) {
-              let n = i*4
-              if(terms[n] || terms[n + 1] || terms[n + 2]) {
-              // if(types[0]) { // this doesn't work unless we change the types of everything... (dots etc)
-                terms[n + 0] = (terms[n + 0] + 1) % 256 // red
-                terms[n + 1] = (terms[n + 1] + 1) % 256 // green
-                terms[n + 2] = (terms[n + 2] + 1) % 256 // blue
-              }
-            }}
+  , 'pard': (terms, types, v) => {
+              const l = types.length
+              for(let i = 0; i < l; i++) {
+                let n = i*4
+                if(terms[n] || terms[n + 1] || terms[n + 2]) {
+                // if(types[0]) { // this doesn't work unless we change the types of everything... (dots etc)
+                  terms[n + 0] = (terms[n + 0] + 1) % 256 // red
+                  terms[n + 1] = (terms[n + 1] + 1) % 256 // green
+                  terms[n + 2] = (terms[n + 2] + 1) % 256 // blue
+                }
+              }}
   },
   { 'name': 'basic black'
   , 'vals': {syz: 10}
@@ -86,20 +86,20 @@ let brushes = [
                      for(let j=v.x; j<v.x+v.syz; j++)
                        types[i + j*w] = 251 // NB. backwards!
                  }
-  , 'pard': (terms, types) => {
-        const l = types.length
-        for(let i = 0; i < l; i++) {
-              if(types[i] === 251) {
-                let rand = Math.floor(Math.random() * 4)
-                let n = [i - w, i + 1, i + w, i - 1].map(n=>n*4)[rand]
-                if(terms[n + 3] === 0) {
-                  terms[n + 0] = (terms[4*i + 0] + 1) % 256 // red
-                  terms[n + 1] = (terms[4*i + 1] + 1) % 256 // green
-                  terms[n + 2] = (terms[4*i + 2] + 1) % 256 // blue
-                  terms[n + 3] =  terms[4*i + 3]
+  , 'pard': (terms, types, v) => {
+              const l = types.length
+              for(let i = 0; i < l; i++) {
+                if(types[i] === 251) {
+                  let rand = Math.floor(Math.random() * 4)
+                  let n = [i - w, i + 1, i + w, i - 1].map(n=>n*4)[rand]
+                  if(terms[n + 3] === 0) {
+                    terms[n + 0] = (terms[4*i + 0] + 1) % 256 // red
+                    terms[n + 1] = (terms[4*i + 1] + 1) % 256 // green
+                    terms[n + 2] = (terms[4*i + 2] + 1) % 256 // blue
+                    terms[n + 3] =  terms[4*i + 3]
+                  }
                 }
-              }
-            }}
+              }}
   },
   { 'name': 'miniflood'
   , 'vals': {liv: 31, hue: 30, lig: 60}
@@ -108,24 +108,24 @@ let brushes = [
   , 'left': v => v.hue = (v.hue + 10) % 101
   , 'righ': v => v.lig = (v.lig + 10) % 101
   , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 255); fillRect(v.x, v.y, v.syz, v.syz, 250)}
-  , 'pard': (terms, types, _, v) => {
-        const l = types.length
-        for(let i = 0; i < l; i++) {
-              if(types[i] === 250) {
-                let rand = Math.floor(Math.random() * 4)
-                let n = [i - w, i + 1, i + w, i - 1].map(n=>n*4)[rand]
-                if(terms[n + 3] === 0) {
-                  terms[n + 0] = (terms[4*i + 0] + 1) % 256 // red
-                  terms[n + 1] = (terms[4*i + 1] + 1) % 256 // green
-                  terms[n + 2] = (terms[4*i + 2] + 1) % 256 // blue
-                  terms[n + 3] =  terms[4*i + 3]
-                  types[n/4] = 250
+  , 'pard': (terms, types, v) => {
+              const l = types.length
+              for(let i = 0; i < l; i++) {
+                if(types[i] === 250) {
+                  let rand = Math.floor(Math.random() * 4)
+                  let n = [i - w, i + 1, i + w, i - 1].map(n=>n*4)[rand]
+                  if(terms[n + 3] === 0) {
+                    terms[n + 0] = (terms[4*i + 0] + 1) % 256 // red
+                    terms[n + 1] = (terms[4*i + 1] + 1) % 256 // green
+                    terms[n + 2] = (terms[4*i + 2] + 1) % 256 // blue
+                    terms[n + 3] =  terms[4*i + 3]
+                    types[n/4] = 250
+                  }
+                  if(1 > Math.random() * v.liv/10) {
+                    types[n/4] = 255
+                  }
                 }
-                if(1 > Math.random() * v.liv/10) {
-                  types[n/4] = 255
-                }
-              }
-            }}
+              }}
   },
   { 'name': 'floodwaves'
   , 'vals': {syz: 10, hue: 30, lig: 60}
@@ -134,19 +134,21 @@ let brushes = [
   , 'left': v => v.hue = (v.hue + 10) % 101
   , 'righ': v => v.lig = (v.lig + 10) % 101
   , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 255); fillRect(v.x, v.y, v.syz, v.syz, 252)}
-  , 'pard': (terms, types, i, v) => {
-              if(types[i] === 252) {
-                let rand = Math.floor(Math.random() * 4)
-                let n = [i - w, i + 1, i + w, i - 1].map(n=>n*4)[rand]
-                if(terms[n + 3] === 0) {
-                  terms[n + 0] = (terms[4*i + 0] + 1) % 256 // red
-                  terms[n + 1] = (terms[4*i + 1] + 1) % 256 // green
-                  terms[n + 2] = (terms[4*i + 2] + 1) % 256 // blue
-                  terms[n + 3] =  terms[4*i + 3]
-                  types[n/4] = 252
+  , 'pard': (terms, types, v) => {
+              const l = types.length
+              for(let i = 0; i < l; i++) {
+                if(types[i] === 252) {
+                  let rand = Math.floor(Math.random() * 4)
+                  let n = [i - w, i + 1, i + w, i - 1].map(n=>n*4)[rand]
+                  if(terms[n + 3] === 0) {
+                    terms[n + 0] = (terms[4*i + 0] + 1) % 256 // red
+                    terms[n + 1] = (terms[4*i + 1] + 1) % 256 // green
+                    terms[n + 2] = (terms[4*i + 2] + 1) % 256 // blue
+                    terms[n + 3] =  terms[4*i + 3]
+                    types[n/4] = 252
+                  }
                 }
-              }
-            }
+              }}
   },
   { 'name': 'lightning like'
   , 'vals': {liv: 31, hue: 30, jmp: 1}
@@ -155,19 +157,21 @@ let brushes = [
   , 'left': v => v.hue = (v.hue + 10) % 101
   , 'righ': v => v.jmp = (v.jmp + 1) % 8
   , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 255); ctx.fillRect(v.x, v.y, 1, 1); types[v.y*w+v.x] = 244}
-  , 'pard': (terms, types, i) => {
-              if(types[i] === 244) {
-                ;[-1,0,1].forEach(j => {
-                  if(Math.random() < 1/vals.liv*10 && terms.length >= 4*(i+w+j+1)) {
-                    let rand = Math.floor(Math.random() * 3)
-                    terms.set(terms.slice(4*i,4*(i+1)), 4*(i+w+j))
-                    terms[4*(i+w+j) + rand] += j*vals.jmp
-                    types[i+w+j] = 244
-                  }
-                })
-                types[i] = 255
-              }
-            }
+  , 'pard': (terms, types, v) => {
+              const l = types.length
+              for(let i = 0; i < l; i++) {
+                if(types[i] === 244) {
+                  ;[-1,0,1].forEach(j => {
+                    if(Math.random() < 1/vals.liv*10 && terms.length >= 4*(i+w+j+1)) {
+                      let rand = Math.floor(Math.random() * 3)
+                      terms.set(terms.slice(4*i,4*(i+1)), 4*(i+w+j))
+                      terms[4*(i+w+j) + rand] += j*vals.jmp
+                      types[i+w+j] = 244
+                    }
+                  })
+                  types[i] = 255
+                }
+              }}
   },
   { 'name': 'confetti'
   , 'vals': {syz: 10, hue: 30, sat: 90}
@@ -188,7 +192,7 @@ let brushes = [
   , 'left': v => v.zwm = (v.zwm + 1) % 101
   , 'righ': v => v.jmp = (v.jmp + 10) % 101
   , 'pynt': v => v
-  , 'fram': v => {
+  , 'pard': (terms, types, v) => {
               if(v.zwm > rand(100)) {
                 v.dir = v.syz < 2 ? 1 : v.syz > 300 ? -1 : v.dir
                 v.syz = Math.abs(v.syz + Math.floor((v.jmp/5) * (v.smw > rand(100) ? v.dir : (v.dir = Math.floor(rand(3))-1)))) % 300
@@ -196,9 +200,6 @@ let brushes = [
             }
   },
 ]
-
-// maybe try using fram instead of pard to see if it's faster
-//
 
 
 document.addEventListener('keydown', e => {
@@ -248,22 +249,14 @@ can.addEventListener('mousemove', e => {
 
 function partypaint() {
   if(vals.party) {
-    // const imageData = ctx.getImageData(0, 0, w, h)
-    // const terms = imageData.data
-    // const l = types.length
-    // for(let i = 0; i < l; i++)
-    //   pardfun(terms, types, i, vals)
-    // ctx.putImageData(imageData, 0, 0)
     const imageData = ctx.getImageData(0, 0, w, h)
     const terms = imageData.data
-    const l = types.length
-    loadout.forEach(b => b.pard ? b.pard(terms, types, 0, vals) : 0)
+    loadout.forEach(b => b.pard ? b.pard(terms, types, vals) : 0)
     ctx.putImageData(imageData, 0, 0)
   }
 }
 
 function noop() {}
-// function par(f, g) {return (...args) => {f(...args); g(...args)}}
 function par(f, g) {return (a,b,c,d) => {f(a,b,c,d); g(a,b,c,d)}} // faster than variadic version... /shrug
 function rem(n, r) { return (n % r + r) % r }
 function rand(n) {return Math.random() * n}
@@ -380,7 +373,6 @@ function go(f) {
     f()
     go(f)
     show_mode()
-    loadout.forEach(b => b.fram ? b.fram(vals) : 0)
   })
 }
 
@@ -400,16 +392,7 @@ init()
 
 
 function timing() {
-  // 68 standard 3x
-  // 42 standard pard only
-  // 48 par 3x
-  // 28 par pard only
-  //
-  // revised for bug fix
-  // 6 par 3x
-  // 6 fram 3x
   let now = performance.now()
   partypaint()
-  loadout.forEach(b => b.fram ? b.fram(vals) : 0)
   console.log(performance.now() - now)
 }
