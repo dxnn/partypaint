@@ -97,6 +97,7 @@ function readChunk(arr, index) {
 
 function getChunks(arr) {
   // https://en.wikipedia.org/wiki/Portable_Network_Graphics
+  // TODO: these should be || not && right?
   if (
     arr[0] !== 0x89 &&
     arr[1] !== 0x50 &&
