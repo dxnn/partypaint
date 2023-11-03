@@ -6,6 +6,7 @@ const h = can.height
 const types = new Uint8Array(w*h)
 let vals = {party: 1, lift: 0}
 let bnum = 0
+let keymap = {}
 let loadout = []
 let pardfun = noop
 let brush
@@ -47,8 +48,8 @@ let brushes = [
   , 'vals': {syz: 10, hue: 30, sat: 90, lig: 60}
   , 'upup': v => v.syz += 1
   , 'down': v => v.syz -= 1
-  , 'left': v => v.hue = (v.hue + 10) % 101
-  , 'righ': v => v.lig = (v.lig + 10) % 101
+  , 'left': v => v.hue = (v.hue + 1) % 101
+  , 'righ': v => v.lig = (v.lig + 1) % 101
   , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lig, 255); ctx.fillRect(v.x, v.y, v.syz, v.syz)}
   , 'pard': (terms, types, v) => {
               const l = types.length
@@ -181,7 +182,7 @@ let brushes = [
   , 'righ': v => v.sat = (v.sat + 10) % 101
   , 'pynt': v => { ctx.fillStyle = filler(v.hue, v.sat, v.lig, 255)
                    let circle = new Path2D()
-                   circle.arc(v.x + Math.random()*360 - 180, v.y + Math.random()*360 - 180, v.syz, 0, 2 * Math.PI)
+                   circle.arc(v.x + Math.random()*360 - 180, v.y + Math.random()*360 - 180, Math.abs(v.syz), 0, 2 * Math.PI)
                    ctx.fill(circle)
                  }
   },
@@ -203,41 +204,47 @@ let brushes = [
 
 
 document.addEventListener('keydown', e => {
-  // THINK: maybe switch to looping while keydown, for consistent velocity regardless of keyboard repeat?
-  //        this might also allow polyphony...
-  //        could tweak polyphony knobs with a different brush, to eg alter the repeat rates of arrows
-  if(e.code === 'ArrowUp' || e.code === 'KeyW') {
-    brush?.upup?.(vals)
-  }
-  if(e.code === 'ArrowDown' || e.code === 'KeyS') {
-    brush?.down?.(vals)
-  }
-  if(e.code === 'ArrowLeft' || e.code === 'KeyA') {
-    brush?.left?.(vals)
-  }
-  if(e.code === 'ArrowRight' || e.code === 'KeyD') {
-    brush?.righ?.(vals)
-  }
-  if(e.code === 'Space') {
+  keymap[e.code] = 1
+
+  if(keymap['Space']) {
     vals.lift = (vals.lift + 1) % 2
   }
-  if(e.code === 'KeyP') {
+  if(keymap['KeyP']) {
     vals.party = (vals.party + 1) % 2
   }
-  if(e.code === 'KeyQ') {
+  if(keymap['KeyQ']) {
     bnum = rem(bnum - 1, loadout.length)
     brush = loadout[bnum]
   }
-  if(e.code === 'KeyE') {
+  if(keymap['KeyE']) {
     bnum = (bnum + 1) % loadout.length
     brush = loadout[bnum]
   }
 
   if(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code))
     e.preventDefault()
+})
+
+document.addEventListener('keyup', e => {
+  keymap[e.code] = 0
+})
+
+function keystuff() {
+  if(keymap['ArrowUp'] || keymap['KeyW']) {
+    brush?.upup?.(vals)
+  }
+  if(keymap['ArrowDown'] || keymap['KeyS']) {
+    brush?.down?.(vals)
+  }
+  if(keymap['ArrowLeft'] || keymap['KeyA']) {
+    brush?.left?.(vals)
+  }
+  if(keymap['ArrowRight'] || keymap['KeyD']) {
+    brush?.righ?.(vals)
+  }
 
   show_mode()
-})
+}
 
 can.addEventListener('mousemove', e => {
   if(vals.lift === 0) {
@@ -372,7 +379,6 @@ function go(f) {
   requestAnimationFrame(t => {
     f()
     go(f)
-    show_mode()
   })
 }
 
@@ -380,7 +386,7 @@ function init() {
   set_loadout()
   show_brushes()
   show_mode()
-  go(partypaint)
+  go(par(partypaint, keystuff))
 }
 
 el('export').addEventListener('click', save)
