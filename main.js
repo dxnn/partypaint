@@ -1,3 +1,13 @@
+//   .-------.   ____   .-------.,---------. ____     __         .-------.   ____   .-./`),---.   .--,---------.
+//   \  _(`)_ \.'  __ `.|  _ _   \          \\   \   /  /        \  _(`)_ \.'  __ `.\ .-.'|    \  |  \          \
+//   | (_ o._)/   '  \  | ( ' )  |`--.  ,---' \  _. /  '         | (_ o._)/   '  \  / `-' |  ,  \ |  |`--.  ,---'
+//   |  (_,_) |___|  /  |(_ o _) /   |   \     _( )_ .'          |  (_,_) |___|  /  |`-'`"|  |\_ \|  |   |   \
+//   |   '-.-'   _.-`   | (_,_).' __ :_ _: ___(_ o _)'           |   '-.-'   _.-`   |.---.|  _( )_\  |   :_ _:
+//   |   |    .'   _    |  |\ \  |  |(_I_)|   |(_,_)'            |   |    .'   _    ||   || (_ o _)  |   (_I_)
+//   |   |    |  _( )_  |  | \ `'   (_(=)_|   `-'  /             |   |    |  _( )_  ||   ||  (_,_)\  |  (_(=)_)
+//   /   )    \ (_ o _) |  |  \    / (_I_) \      /              /   )    \ (_ o _) /|   ||  |    |  |   (_I_)
+//   `---'     '.(_,_).'''-'   `'-'  '---'  `-..-'               `---'     '.(_,_).' '---''--'    '--'   '---'
+
 const el = document.getElementById.bind(document)
 const can = el('cancan')
 const ctx = can.getContext('2d', {willReadFrequently: true})
@@ -8,10 +18,15 @@ let vals = {party: 1, lift: 0}
 let bnum = 0
 let keymap = {}
 let loadout = []
-// let pardfun = noop
 let brush
 
 // hey, start here!
+// - save/load full brushes!
+// - paint the brush!
+// - maybe tweak floodwaves so it's like it used to be?
+// - toda file connection...
+// - noisemaker brush that just randomly changes pixels...
+
 // party mode: random brush change every ten seconds? presses random buttons? maybe it's a brush? 'surprise me!' brush...
 // multiplayer? how?
 // drawing prompts?
@@ -41,208 +56,6 @@ let brush
 
 // THINK: the current setup is fairly universal (pard is called once per tick, and brushes can do whatever they want with that)
 //        and much faster than the interleaved version, but it loses the compositional style of pixel-by-pixel brush stacking...
-
-let brushes = [
-  { 'name': 'pard paint'
-  , 'vals': {syz: 10, hue: 30, sat: 90, lyt: 60}
-  , 'upup': v => v.syz += 1
-  , 'down': v => v.syz -= 1
-  , 'left': v => v.hue = (v.hue + 1) % 101
-  , 'rite': v => v.lyt = (v.lyt + 1) % 101
-  , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lyt, 255); ctx.fillRect(v.x, v.y, v.syz, v.syz)}
-  , 'pard': (terms, types, v) => {
-              const l = types.length
-              for(let i = 0; i < l; i++) {
-                let n = i*4
-                if(terms[n] || terms[n + 1] || terms[n + 2]) {
-                // if(types[0]) { // this doesn't work unless we change the types of everything... (dots etc)
-                  terms[n + 0] = (terms[n + 0] + 1) % 256 // red
-                  terms[n + 1] = (terms[n + 1] + 1) % 256 // green
-                  terms[n + 2] = (terms[n + 2] + 1) % 256 // blue
-                }
-              }}
-  },
-  { 'name': 'basic black'
-  , 'vals': {syz: 10}
-  , 'upup': v => v.syz += 1
-  , 'down': v => v.syz -= 1
-  , 'pynt': v => {ctx.fillStyle = '#000000'; ctx.fillRect(v.x, v.y, v.syz, v.syz)}
-  },
-  { 'name': 'eraser'
-  , 'vals': {syz: 10}
-  , 'upup': v => v.syz += 1
-  , 'down': v => v.syz -= 1
-  , 'pynt': v => ctx.clearRect(v.x, v.y, v.syz, v.syz)
-  },
-  { 'name': 'mirror growth'
-  , 'vals': {liv: 31, hue: 30, lyt: 60}
-  , 'upup': v => v.liv += 1
-  , 'down': v => v.liv -= 1
-  , 'left': v => v.hue = (v.hue + 1) % 101
-  , 'rite': v => v.lyt = (v.lyt + 1) % 101
-  , 'pynt': v => { ctx.fillStyle = filler(v.hue, v.sat, v.lyt, 255);
-                   ctx.fillRect(v.x, v.y, v.syz, v.syz)
-                   for(let i=v.y; i<v.y+v.syz; i++)
-                     for(let j=v.x; j<v.x+v.syz; j++)
-                       types[i + j*w] = 251 // NB. backwards!
-                 }
-  , 'pard': (terms, types, v) => {
-              const l = types.length
-              for(let i = 0; i < l; i++) {
-                if(types[i] === 251) {
-                  let n = [i - w, i + 1, i + w, i - 1].map(n=>n*4)[rand(4)]
-                  if(terms[n + 3] === 0) {
-                    terms[n + 0] = (terms[4*i + 0] + 1) % 256 // red
-                    terms[n + 1] = (terms[4*i + 1] + 1) % 256 // green
-                    terms[n + 2] = (terms[4*i + 2] + 1) % 256 // blue
-                    terms[n + 3] =  terms[4*i + 3]
-                  }
-                }
-              }}
-  },
-  { 'name': 'miniflood'
-  , 'vals': {liv: 31, hue: 30, lyt: 60}
-  , 'upup': v => v.liv += 1
-  , 'down': v => v.liv -= 1
-  , 'left': v => v.hue = (v.hue + 1) % 101
-  , 'rite': v => v.lyt = (v.lyt + 1) % 101
-  , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lyt, 255); fillRect(v.x, v.y, v.syz, v.syz, 250)}
-  , 'pard': (terms, types, v) => {
-              const l = types.length
-              for(let i = 0; i < l; i++) {
-                if(types[i] === 250) {
-                  let n = [i - w, i + 1, i + w, i - 1].map(n=>n*4)[rand(4)]
-                  if(terms[n + 3] === 0) {
-                    terms[n + 0] = (terms[4*i + 0] + 1) % 256 // red
-                    terms[n + 1] = (terms[4*i + 1] + 1) % 256 // green
-                    terms[n + 2] = (terms[4*i + 2] + 1) % 256 // blue
-                    terms[n + 3] =  terms[4*i + 3]
-                    types[n/4] = 250
-                  }
-                  if(1 > Math.random() * v.liv/10) {
-                    types[n/4] = 255
-                  }
-                }
-              }}
-  },
-  { 'name': 'floodwaves'
-  , 'vals': {syz: 10, hue: 30, lyt: 60}
-  , 'upup': v => v.syz += 1
-  , 'down': v => v.syz -= 1
-  , 'left': v => v.hue = (v.hue + 1) % 101
-  , 'rite': v => v.lyt = (v.lyt + 1) % 101
-  , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lyt, 255); fillRect(v.x, v.y, v.syz, v.syz, 252)}
-  , 'pard': (terms, types, v) => {
-              const l = types.length
-              for(let i = 0; i < l; i++) {
-                if(types[i] === 252) {
-                  let n = [i - w, i + 1, i + w, i - 1].map(n=>n*4)[rand(4)]
-                  if(terms[n + 3] === 0) {
-                    terms[n + 0] = (terms[4*i + 0] + 1) % 256 // red
-                    terms[n + 1] = (terms[4*i + 1] + 1) % 256 // green
-                    terms[n + 2] = (terms[4*i + 2] + 1) % 256 // blue
-                    terms[n + 3] =  terms[4*i + 3]
-                    types[n/4] = 252
-                  }
-                }
-              }}
-  },
-  { 'name': 'lightning like'
-  , 'vals': {liv: 31, hue: 30, jmp: 1}
-  , 'upup': v => v.liv = (v.liv + 1) % 101
-  , 'down': v => v.liv = (v.liv - 1 + 101) % 101 // TODO: rem(v.liv - 1, 101)
-  , 'left': v => v.hue = (v.hue + 1) % 101
-  , 'rite': v => v.jmp = (v.jmp + 1) % 100
-  , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lyt, 255); ctx.fillRect(v.x, v.y, 1, 1); types[v.y*w+v.x] = 244}
-  , 'pard': (terms, types, v) => {
-              const l = types.length - 1
-              for(let i = 0; i < l; i++) {
-                if(types[i] === 244) {
-                  ;[-1,0,1].forEach(j => {
-                    let next = i+w+j
-                    if(Math.random() < vals.liv/100) { // && terms.length >= 4*(next+1)) {
-                      terms.set(terms.slice(4*i,4*(i+1)), 4*next)
-                      terms[4*next + rand(3)] += Math.floor(j*vals.jmp/10)
-                      types[next] = 244
-                    }
-                  })
-                  types[i] = 255
-                }
-              }}
-  },
-  { 'name': 'confetti'
-  , 'vals': {syz: 10, hue: 30, sat: 90}
-  , 'upup': v => v.syz += 1
-  , 'down': v => v.syz -= 1
-  , 'left': v => v.hue = (v.hue + 1) % 101
-  , 'rite': v => v.sat = (v.sat + 1) % 101
-  , 'pynt': v => { ctx.fillStyle = filler(v.hue, v.sat, v.lyt, 255)
-                   let circle = new Path2D()
-                   circle.arc(v.x + Math.random()*360 - 180, v.y + Math.random()*360 - 180, Math.abs(v.syz), 0, 2 * Math.PI)
-                   ctx.fill(circle)
-                 }
-  },
-  { 'name': 'randosize'
-  , 'vals': {smw: 90, zwm: 20, jmp: 10, dir: 1}
-  , 'upup': v => v.smw = (v.smw + 1) % 101
-  , 'down': v => v.smw = (v.smw - 1) % 101
-  , 'left': v => v.zwm = (v.zwm + 1) % 101
-  , 'rite': v => v.jmp = (v.jmp + 1) % 101
-  , 'pynt': v => v
-  , 'pard': (terms, types, v) => {
-              if(v.zwm > rand(100)) {
-                v.dir = v.syz < 4 ? 1 : v.syz > 300 ? -1 : v.dir
-                v.syz = Math.abs(v.syz + Math.floor((v.jmp/50) * (v.smw > rand(100) ? v.dir : (v.dir = rand(3)-1)))) % 300
-              }
-            }
-  },
-  { 'name': 'highlighter'
-  , 'vals': {syz: 10, hue: 30, alf: 127}
-  , 'upup': v => v.syz += 1
-  , 'down': v => v.syz -= 1
-  , 'left': v => v.hue = (v.hue + 1) % 101
-  , 'rite': v => v.alf = (v.alf + 1) % 256
-  , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lyt, v.alf); fillRect(v.x, v.y, v.syz, v.syz, 255)}
-  },
-  { 'name': 'smudgatron'
-  , 'vals': {syz: 10, hue: 30, alf: 127}
-  , 'upup': v => v.syz += 1
-  , 'down': v => v.syz -= 1
-  , 'left': v => v.hue = (v.hue + 1) % 101
-  , 'rite': v => v.alf = (v.alf + 1) % 256
-  , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lyt, v.alf); fillRect(v.x, v.y, v.syz, v.syz, 247)}
-  , 'pard': (terms, types, v) => {
-              const l = types.length - 1
-              for(let i = 0; i < l; i++) {
-                if(types[i] === 247) {
-                  let next = i+1
-                  terms.set(terms.slice(4*i,4*(i+1)), 4*next)
-                  terms[4*next + rand(3)] += Math.floor(vals.jmp/10)
-                  types[next] = 244 // an electrifying accident
-                  types[i] = 255
-                }
-              }}
-  },
-  { 'name': 'rivery'
-  , 'vals': {liv: 31, hue: 30, alf: 50}
-  , 'upup': v => v.liv = (v.liv + 1) % 101
-  , 'down': v => v.liv = (v.liv - 1 + 101) % 101
-  , 'left': v => v.hue = (v.hue + 1) % 101
-  , 'rite': v => v.alf = (v.alf + 1) % 256
-  , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lyt, v.alf); fillRect(v.x, v.y, v.syz, v.syz, 247)}
-  , 'pard': (terms, types, v) => {
-              const l = types.length - 1
-              for(let i = 0; i < l; i++) {
-                if(types[i] === 247) {
-                  if(rand(100) < 10) { // change
-                    terms[i*4] += 1
-                  } else { // follow
-
-                  }
-                }
-              }}
-  },
-]
 
 
 document.addEventListener('keydown', e => {
@@ -328,14 +141,13 @@ function show_brushes() {
 }
 
 function show_mode() {
-  el('mode').innerHTML  = `${vals.lift&&'invisible'||''} ${vals.party&&'PARTY!!!'||''} ${brush.name} :: `
+  el('mode').innerHTML  = `${vals.lift&&'invisible'||''} ${vals.party&&'PARTY!!!'||''} <b>${brush.name}</b> :: `
   for(k in vals)
     if(!['party', 'lift', 'x', 'y'].includes(k))
-      el('mode').innerHTML += `${vals[k]}${k} `
+      el('mode').innerHTML += `<span class="${Object.entries(trick(brush)).reduce((acc, [key,v]) => v?.includes?.(k) ? acc + ' ' + key : acc, '')}">${vals[k]}${k}</span> `
 }
 
 function set_loadout() {
-  // pardfun = noop
   el('loaded').innerHTML = ''
 
   if(!loadout.length)
@@ -343,8 +155,6 @@ function set_loadout() {
 
   for(let b = 0; b < loadout.length; b++) {
     let brush = loadout[b]
-    // if(brush.pard)
-    //   pardfun = pardfun === noop ? brush.pard : par(pardfun, brush.pard)
     if(brush.vals)
       vals = {...brush.vals, ...vals}
     el('loaded').innerHTML += `<span class="loaded" fwump="${b}" style="color: hsl(${[...brush.name].map(c=>c.charCodeAt(0)-90).reduce((acc,n)=>acc+n*7,0)}, 80%, 50%)">${brush.name}</span>`
@@ -380,9 +190,7 @@ function chunker(arrayBuffer) {
 
 function add_my_chunks(cs) {
   let iend = cs.pop()
-  // make two chunks: a json one and a uint8 one
-  // json should contain loadout, vals
-  // consider packing types into a png to compact it...
+  // THINK: consider packing types into a png to compact it...
   let types_chunk = {chunkType: 'prDy', data: types}
   let brush_chunk = {chunkType: 'paRd', data: slam_obj({vals, bnum, loadout: munge_loadout(loadout)})}
   cs.push(types_chunk)
