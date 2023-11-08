@@ -37,7 +37,7 @@ let brushes = [
   , 'down': v => v.liv -= 1
   , 'left': v => v.hue = (v.hue + 1) % 101
   , 'rite': v => v.lyt = (v.lyt + 1) % 101
-  , 'pynt': v => { ctx.fillStyle = filler(v.hue, v.sat, v.lyt, 255);
+  , 'pynt': v => { ctx.fillStyle = filler(v.hue, v.sat, v.lyt, 255)
                    ctx.fillRect(v.x, v.y, v.syz, v.syz)
                    for(let i=v.y; i<v.y+v.syz; i++)
                      for(let j=v.x; j<v.x+v.syz; j++)
@@ -151,6 +151,65 @@ let brushes = [
                 v.dir = v.syz < 4 ? 1 : v.syz > 300 ? -1 : v.dir
                 v.syz = Math.abs(v.syz + Math.floor((v.jmp/50) * (v.smw > rand(100) ? v.dir : (v.dir = rand(3)-1)))) % 300
               }
+            }
+  },
+  { 'name': 'metabrush1'
+  , 'vals': {syz: 10, hue: 30, sat: 90, lyt: 60}
+  , 'upup': v => v.syz += 1
+  , 'down': v => v.syz -= 1
+  , 'left': v => v.hue = (v.hue + 1) % 101
+  , 'rite': v => v.lyt = (v.lyt + 1) % 101
+  , 'pynt': v => {
+              ctx.fillStyle = filler(v.hue, v.sat, v.lyt, 180)
+              let str = JSON.stringify(trick(brush))
+              ctx.font = `${v.syz}px monospace`
+              ctx.fillText(str, v.x, v.y)
+            }
+  },
+  { 'name': 'metabrush2'
+  , 'vals': {syz: 10, hue: 30, sat: 90, lyt: 60}
+  , 'upup': v => v.syz += 1
+  , 'down': v => v.syz -= 1
+  , 'left': v => v.hue = (v.hue + 1) % 101
+  , 'rite': v => v.lyt = (v.lyt + 1) % 101
+  , 'pynt': v => v
+  , 'post': v => {
+              ctx.fillStyle = filler(v.hue, v.sat, v.lyt, 180)
+              let str = JSON.stringify(trick(brush))
+              ctx.font = `${v.syz}px monospace`
+              ctx.fillText(str, v.x, v.y)
+            }
+  },
+  { 'name': 'metabrush3'
+  , 'vals': {syz: 10, hue: 30, sat: 90, lyt: 60}
+  , 'upup': v => v.syz += 1
+  , 'down': v => v.syz -= 1
+  , 'left': v => v.hue = (v.hue + 1) % 101
+  , 'rite': v => v.lyt = (v.lyt + 1) % 101
+  , 'pynt': v => v
+  , 'post': v => {
+              let str = JSON.stringify(trick(brush)).replaceAll(' ','')//.substr(9)
+              let stack = []
+              let x = v.x, y = v.y
+              ctx.lineWidth = 1 // v.syz
+              ctx.strokeStyle = filler(v.hue, v.sat, v.lyt, 30)
+              ctx.beginPath()
+              str.split('').forEach(c => {
+                if(['(', '[', '{'].includes(c)) {
+                  stack.push([x, y])
+                }
+                else if([')', ']', '}'].includes(c)) {
+                  [x, y] = stack.pop()
+                  ctx.moveTo(x, y)
+                }
+                else {
+                  let n = (c.charCodeAt(0) - 60) / 3
+                  x = x + 10 * Math.cos(n)
+                  y = y + 10 * Math.sin(n)
+                  ctx.lineTo(x, y)
+                }
+              })
+              ctx.stroke()
             }
   },
   { 'name': 'highlighter'

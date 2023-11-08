@@ -115,6 +115,7 @@ function partypaint() {
     const terms = imageData.data
     loadout.forEach(b => b.pard ? b.pard(terms, types, vals) : 0)
     ctx.putImageData(imageData, 0, 0)
+    loadout.forEach(b => b.post ? b.post(vals) : 0)
   }
 }
 
