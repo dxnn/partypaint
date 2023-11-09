@@ -11,7 +11,8 @@ let brushes = [
               const l = types.length
               for(let i = 0; i < l; i++) {
                 let n = i*4
-                if(types[i] !== 127 && (terms[n] || terms[n + 1] || terms[n + 2])) {
+                // if(types[i] !== 127 && (terms[n] || terms[n + 1] || terms[n + 2])) { // bring this back!
+                if(!(types[i] === 127 || (terms[n] === terms[n + 1] && terms[n + 1] === terms[n + 2]))) {
                 // if(types[0]) { // this doesn't work unless we change the types of everything... (dots etc)
                   terms[n + 0] = (terms[n + 0] + 1) % 256 // red
                   terms[n + 1] = (terms[n + 1] + 1) % 256 // green
@@ -82,6 +83,28 @@ let brushes = [
                 }
               }}
   },
+  { 'name': 'floodfill'
+  , 'vals': {syz: 10, hue: 30, lyt: 60}
+  , 'upup': v => v.syz += 1
+  , 'down': v => v.syz -= 1
+  , 'left': v => v.hue = (v.hue + 1) % 101
+  , 'rite': v => v.lyt = (v.lyt + 1) % 101
+  , 'pynt': v => {ctx.fillStyle = filler(v.hue, v.sat, v.lyt, 255); fillRect(v.x, v.y, v.syz, v.syz, 254)}
+  , 'pard': (terms, types, v) => {
+              const l = types.length
+              for(let i = 0; i < l; i++) {
+                if(types[i] === 254) {
+                  let n = [i - w, i + 1, i + w, i - 1].map(n=>n*4)[rand(4)]
+                  if(terms[n + 3] === 0) {
+                    terms[n + 0] = (terms[4*i + 0] + 1) % 256 // red
+                    terms[n + 1] = (terms[4*i + 1] + 1) % 256 // green
+                    terms[n + 2] = (terms[4*i + 2] + 1) % 256 // blue
+                    terms[n + 3] =  terms[4*i + 3]
+                    types[n/4] = 254
+                  }
+                }
+              }}
+  },
   { 'name': 'floodwaves'
   , 'vals': {syz: 10, hue: 30, lyt: 60}
   , 'upup': v => v.syz += 1
@@ -95,9 +118,9 @@ let brushes = [
                 if(types[i] === 252) {
                   let n = [i - w, i + 1, i + w, i - 1].map(n=>n*4)[rand(4)]
                   if(terms[n + 3] === 0) {
-                    terms[n + 0] = (terms[4*i + 0] + 1) % 256 // red
-                    terms[n + 1] = (terms[4*i + 1] + 1) % 256 // green
-                    terms[n + 2] = (terms[4*i + 2] + 1) % 256 // blue
+                    terms[n + 0] = rem(terms[4*i + 0] + v.liv, 256) // red
+                    terms[n + 1] = rem(terms[4*i + 1] + v.liv, 256) // green
+                    terms[n + 2] = rem(terms[4*i + 2] + v.liv, 256) // blue
                     terms[n + 3] =  terms[4*i + 3]
                     types[n/4] = 252
                   }
@@ -153,20 +176,7 @@ let brushes = [
               }
             }
   },
-  { 'name': 'metabrush1'
-  , 'vals': {syz: 10, hue: 30, sat: 90, lyt: 60}
-  , 'upup': v => v.syz += 1
-  , 'down': v => v.syz -= 1
-  , 'left': v => v.hue = (v.hue + 1) % 101
-  , 'rite': v => v.lyt = (v.lyt + 1) % 101
-  , 'pynt': v => {
-              ctx.fillStyle = filler(v.hue, v.sat, v.lyt, 180)
-              let str = JSON.stringify(trick(brush))
-              ctx.font = `${v.syz}px monospace`
-              ctx.fillText(str, v.x, v.y)
-            }
-  },
-  { 'name': 'metabrush2'
+  { 'name': 'metabrush-text'
   , 'vals': {syz: 10, hue: 30, sat: 90, lyt: 60}
   , 'upup': v => v.syz += 1
   , 'down': v => v.syz -= 1
@@ -180,7 +190,7 @@ let brushes = [
               ctx.fillText(str, v.x, v.y)
             }
   },
-  { 'name': 'metabrush3'
+  { 'name': 'metabrush-paint'
   , 'vals': {syz: 10, hue: 30, sat: 90, lyt: 60}
   , 'upup': v => v.syz += 1
   , 'down': v => v.syz -= 1
